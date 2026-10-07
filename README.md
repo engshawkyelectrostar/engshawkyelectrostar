@@ -103,8 +103,10 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 pytest                   # الاختبارات بتشتغل بدون أوراكل (Fake repo)
 ```
 
-**مهم لأوراكل 11g:** `python-oracledb` بالـ thin mode بيدعم 12.1+ بس. لازم **thick mode**: نزّل Oracle Instant Client (19c بيدعم 11.2) وحدد `ORACLE_CLIENT_LIB_DIR`. شغّل الخدمة على جهاز بيوصل لأوراكل داخليًا (نفس سيرفر IIS أو سيرفر Linux داخلي) ومتعرضهاش للإنترنت إلا عن طريق VPN أو reverse proxy بـ HTTPS.
+**قاعدة البيانات PostgreSQL:** الخدمة بتتصل بـ `DATABASE_URL` (psycopg 3 + connection pool، و`statement_timeout` 30 ثانية). يوزر الـ API (`erp_api/sql/002_roles.sql`) صلاحياته قراءة على جداول/Views محددة + `INSERT` على `api_requests` بس. شغّل الخدمة جنب الداتابيز (أو على VPS مع VPN/SSL)، ومتفتحش بورت 5432 للإنترنت.
 
 **التحويل دورة بدورة:** وجّه كل مسار من IIS (URL Rewrite) للنسخة القديمة (`.asp`) أو الجديدة (FastAPI) حسب ما الدورة تخلص وتتختبر. قارن مخرجات النسختين على نفس المدخلات قبل التبديل.
 
 > أسماء الجداول والأعمدة في `erp_api/app/repo.py` أمثلة (`customers`, `sales_invoices`, `sales_invoice_lines`, `stock_view`) وهتتعدل بعد ما تبعت الـ schema.
+
+> **ملاحظة:** مجلد `api/` (ASP + OraOLEDB) هو النسخة المرحلية لأوراكل. بعد الانتقال لـ PostgreSQL المسار الأساسي هو `erp_api/`. لو صفحات ASP هتفضل تتصل بـ Postgres استخدم psqlODBC بدل OraOLEDB.

@@ -19,12 +19,13 @@ log = logging.getLogger("erp_api")
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     s = load_settings()
-    if s.oracle_dsn:
+    if s.database_url:
         db.init_pool(s)
     yield
+    db.close_pool()
 
 
-app = FastAPI(title="ERP API", version="1.0", description="REST API فوق ERP (Oracle 11g)", lifespan=lifespan)
+app = FastAPI(title="ERP API", version="1.0", description="REST API فوق ERP (PostgreSQL)", lifespan=lifespan)
 auth = [Depends(require_auth)]
 
 

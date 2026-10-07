@@ -1,5 +1,5 @@
 fastapi>=0.110
 uvicorn[standard]>=0.29
-oracledb>=2.0
+psycopg[binary,pool]>=3.1
 pytest>=8
 httpx>=0.27

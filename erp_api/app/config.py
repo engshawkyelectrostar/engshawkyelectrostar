@@ -6,10 +6,7 @@ from dataclasses import dataclass
 class Settings:
     api_key: str
     allowed_ips: tuple[str, ...]
-    oracle_client_lib_dir: str
-    oracle_user: str
-    oracle_password: str
-    oracle_dsn: str
+    database_url: str
 
 
 def load_settings() -> Settings:
@@ -17,8 +14,5 @@ def load_settings() -> Settings:
     return Settings(
         api_key=os.environ.get("ERP_API_KEY", ""),
         allowed_ips=tuple(i.strip() for i in ips.split(",") if i.strip()),
-        oracle_client_lib_dir=os.environ.get("ORACLE_CLIENT_LIB_DIR", ""),
-        oracle_user=os.environ.get("ORACLE_USER", ""),
-        oracle_password=os.environ.get("ORACLE_PASSWORD", ""),
-        oracle_dsn=os.environ.get("ORACLE_DSN", ""),
+        database_url=os.environ.get("DATABASE_URL", ""),
     )
