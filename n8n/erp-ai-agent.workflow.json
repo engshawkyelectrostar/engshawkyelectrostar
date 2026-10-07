@@ -1,0 +1,86 @@
+{
+  "name": "ERP AI Agent",
+  "nodes": [
+    {
+      "parameters": { "options": {} },
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "webhookId": "a1000000-0000-4000-8000-0000000000aa"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "انت مساعد لنظام ERP. استخدم الأدوات المتاحة فقط للإجابة، ولا تخمّن أرقام. لو الأداة رجعت truncated=true قول للمستخدم إن النتائج مقتطعة واطلب فلترة أدق. رد بنفس لغة المستخدم."
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [320, 0]
+    },
+    {
+      "parameters": {
+        "model": { "__rl": true, "mode": "list", "value": "claude-sonnet-4-5" },
+        "options": {}
+      },
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [240, 240]
+    },
+    {
+      "parameters": {
+        "toolDescription": "بحث عن عملاء في الـ ERP بالاسم. ترجع cust_id, cust_name, phone, balance.",
+        "url": "https://erp.example.com/api/v1/customers.asp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "parametersQuery": {
+          "values": [
+            { "name": "q", "valueProvider": "modelOutput", "description": "جزء من اسم العميل" },
+            { "name": "limit", "valueProvider": "fieldValue", "value": "20" }
+          ]
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "Tool: Customers",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [400, 240]
+    },
+    {
+      "parameters": {
+        "toolDescription": "فواتير المبيعات. فلتر بـ from/to (YYYY-MM-DD) و cust_id. ترجع inv_no, inv_date, cust_id, total_amount, status.",
+        "url": "https://erp.example.com/api/v1/invoices.asp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "parametersQuery": {
+          "values": [
+            { "name": "from", "valueProvider": "modelOutput", "description": "تاريخ البداية YYYY-MM-DD" },
+            { "name": "to", "valueProvider": "modelOutput", "description": "تاريخ النهاية YYYY-MM-DD" },
+            { "name": "cust_id", "valueProvider": "modelOutput", "description": "رقم العميل (اختياري)" },
+            { "name": "limit", "valueProvider": "fieldValue", "value": "50" }
+          ]
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000005",
+      "name": "Tool: Invoices",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [560, 240]
+    }
+  ],
+  "connections": {
+    "Chat Trigger": { "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]] },
+    "Anthropic Chat Model": { "ai_languageModel": [[{ "node": "AI Agent", "type": "ai_languageModel", "index": 0 }]] },
+    "Tool: Customers": { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "Tool: Invoices": { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

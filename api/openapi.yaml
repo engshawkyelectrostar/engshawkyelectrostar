@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: ERP API
+  version: "1.0"
+  description: واجهة قراءة فقط فوق ERP (ASP Classic + Oracle 11g)
+servers:
+  - url: https://erp.example.com/api/v1
+security:
+  - ApiKey: []
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+paths:
+  /health.asp:
+    get:
+      summary: فحص حالة الـ API وقاعدة البيانات
+      responses:
+        "200": { description: OK }
+  /customers.asp:
+    get:
+      summary: بحث عن عملاء بالاسم
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 60 }, description: جزء من اسم العميل }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        "200": { description: قائمة العملاء }
+  /invoices.asp:
+    get:
+      summary: فواتير المبيعات بفلترة التاريخ والعميل
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date }, description: YYYY-MM-DD }
+        - { name: to, in: query, schema: { type: string, format: date }, description: YYYY-MM-DD }
+        - { name: cust_id, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        "200": { description: قائمة الفواتير }
