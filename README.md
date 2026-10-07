@@ -81,3 +81,30 @@
 2. أسماء الجداول/الـ Views المعنية وأعمدتها (أو DDL).
 3. هل n8n مثبّت فين (Docker على Linux؟ cloud؟) وهل بيوصل لسيرفر IIS داخليًا؟
 4. هل المطلوب قراءة بس ولا فيه عمليات كتابة؟
+
+---
+
+## المسار الحديث: `erp_api/` (Python FastAPI)
+
+نفس عقد الـ API بتاع نسخة ASP (`{"ok","count","truncated","data"}`، أعمدة lowercase، نفس باراميترات `q/limit/from/to/cust_id`)، بس بدون `.asp` في المسار: `/api/v1/customers`. ده اللي بيسمح بالتحويل دورة بدورة من غير ما n8n أو أي عميل يتغيّر.
+
+| Endpoint | الوظيفة |
+|---|---|
+| `GET /api/v1/customers`, `/invoices`, `/stock` | قراءة |
+| `GET /api/v1/forecast/sales?item_id=..` | توقع مبيعات شهرية (Holt) + اقتراح إعادة الطلب من رصيد المخزون |
+| `POST /api/v1/requests` | كتابة: بتتسجل `PENDING` في `api_requests` (انظر `erp_api/sql/001_api_requests.sql`) لحد الموافقة والتنفيذ بـ Stored Procedure |
+| `GET /docs` | OpenAPI تفاعلي |
+
+**التشغيل:**
+```bash
+cd erp_api && pip install -r requirements.txt
+cp .env.example .env     # املا القيم، وصدّرها كـ environment variables
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+pytest                   # الاختبارات بتشتغل بدون أوراكل (Fake repo)
+```
+
+**مهم لأوراكل 11g:** `python-oracledb` بالـ thin mode بيدعم 12.1+ بس. لازم **thick mode**: نزّل Oracle Instant Client (19c بيدعم 11.2) وحدد `ORACLE_CLIENT_LIB_DIR`. شغّل الخدمة على جهاز بيوصل لأوراكل داخليًا (نفس سيرفر IIS أو سيرفر Linux داخلي) ومتعرضهاش للإنترنت إلا عن طريق VPN أو reverse proxy بـ HTTPS.
+
+**التحويل دورة بدورة:** وجّه كل مسار من IIS (URL Rewrite) للنسخة القديمة (`.asp`) أو الجديدة (FastAPI) حسب ما الدورة تخلص وتتختبر. قارن مخرجات النسختين على نفس المدخلات قبل التبديل.
+
+> أسماء الجداول والأعمدة في `erp_api/app/repo.py` أمثلة (`customers`, `sales_invoices`, `sales_invoice_lines`, `stock_view`) وهتتعدل بعد ما تبعت الـ schema.
